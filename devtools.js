@@ -17948,6 +17948,7 @@
       window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.get(1);
   // TODO Refactoring needed ref react/packages/react-devtools-shared/src/backend/agent.js getBestMatchingRendererInterface
   const getDevtoolsGlobalHookRenderer = () => {
+      console.log(window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
       if (!checkDevtoolsGlobalHook())
           return null;
       return window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.get(1);
@@ -17974,8 +17975,6 @@
   };
   function initializeDevToolsLatest() {
       // const uid = uuid.v1();
-      // The dispatch needs to happen before initializing, so that the backend can already listen
-      // dispatch({ type: 'activate-react-devtools', uid });
       // @ts-ignore
       if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined") {
           try {
