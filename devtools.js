@@ -17621,7 +17621,7 @@
       // Call this before importing React (or any other packages that might import React).
       backendExports.initialize(window);
       backendExports.activate(window);
-      const connection = sdk.connect(window);
+      const connection = sdk.connect(window.parent);
       const api = {
           startInspectingHost: () => {
               if (!checkDevtoolsGlobalHook()) {
@@ -17649,7 +17649,7 @@
               window.removeEventListener("click", handleInspectorClick, true);
           },
       };
-      sdk.expose(api, window);
+      sdk.expose(api, window.parent, window);
       const handleElementPointerOver = (e) => {
           const target = e.target;
           if (!target || !overlay)
