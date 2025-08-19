@@ -3455,6 +3455,7 @@
             const source = await getFiberSource(fiber);
             // const path = target.getAttribute("data-insp-path") || "";
             const props = fiber.memoizedProps;
+            console.log({ fiber, props, source });
             connection.selectElement({ props, source });
         };
     }
