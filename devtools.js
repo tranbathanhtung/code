@@ -15467,6 +15467,7 @@
             },
         };
         expose(api, window.parent, window);
+        connection.clearLogs();
         libExports.Hook(window.console, async (log) => {
             connection.log(log);
         });
@@ -15489,7 +15490,7 @@
             // const path = target.getAttribute("data-insp-path") || "";
             const props = fiber.memoizedProps;
             console.log({ fiber, props, source });
-            connection.selectElement({ props, source });
+            // connection.selectElement({ props, source });
         };
     }
     // Initialize when DOM is ready
