@@ -1,8 +1,7 @@
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+(function (factory) {
     typeof define === 'function' && define.amd ? define(factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.DevTools = factory());
-})(this, (function () { 'use strict';
+    factory();
+})((function () { 'use strict';
 
     /**
      * @license
@@ -22,7 +21,7 @@
         canHandle: (val) => isObject$1(val) && val[proxyMarker],
         serialize(obj) {
             const { port1, port2 } = new MessageChannel();
-            expose$1(obj, port1);
+            expose(obj, port1);
             return [port2, [port2]];
         },
         deserialize(port) {
@@ -77,7 +76,7 @@
         }
         return false;
     }
-    function expose$1(obj, ep = globalThis, allowedOrigins = ["*"]) {
+    function expose(obj, ep = globalThis, allowedOrigins = ["*"]) {
         ep.addEventListener("message", function callback(ev) {
             if (!ev || !ev.data) {
                 return;
@@ -118,7 +117,7 @@
                     case "ENDPOINT" /* MessageType.ENDPOINT */:
                         {
                             const { port1, port2 } = new MessageChannel();
-                            expose$1(obj, port2);
+                            expose(obj, port2);
                             returnValue = transfer(port1, [port1]);
                         }
                         break;
@@ -359,19 +358,6 @@
             .map(() => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16))
             .join("-");
     }
-
-    // export const api = {
-    //   ui: {
-    //     onmessage: () => {},
-    //     postMessage: () => {},
-    //   },
-    // };
-    const expose = (api, app, context) => {
-        return expose$1(api, windowEndpoint(app, context));
-    };
-    const connect = (app, context) => {
-        return wrap(windowEndpoint(app, context));
-    };
 
     /**
      * @license bippy
@@ -15436,14 +15422,35 @@
 
     var libExports = requireLib();
 
-    let overlay = null;
-    const mousePos = { x: 0, y: 0 };
-    const getInspectName = (element) => {
-        return element.nodeName;
-    };
-    function setupConsole() { }
-    function initializeDevToolsLatest() {
-        const connection = connect(window.parent);
+    class LogClient {
+        baseURL;
+        constructor() {
+            this.baseURL = "http://localhost:4096/api/v1";
+        }
+        async append(log) {
+            await fetch(`${this.baseURL}/logs/append`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ log }),
+            });
+        }
+        async clear() {
+            await fetch(`${this.baseURL}/logs/clear`, {
+                method: "POST",
+            });
+        }
+    }
+    async function initializeDevToolsLatest() {
+        const logClient = new LogClient();
+        await logClient.clear();
+        const getInspectName = (element) => {
+            return element.nodeName;
+        };
+        let overlay = null;
+        const mousePos = { x: 0, y: 0 };
+        wrap(windowEndpoint(window.parent));
         const api = {
             startInspectingHost: () => {
                 if (!overlay) {
@@ -15466,10 +15473,20 @@
                 window.removeEventListener("click", handleInspectorClick, true);
             },
         };
-        expose(api, window.parent, window);
-        connection.clearLogs();
+        expose(api, windowEndpoint(window.parent));
         libExports.Hook(window.console, async (log) => {
-            connection.log(log);
+            const message = log;
+            const logEntry = {
+                id: message.id,
+                type: "console",
+                source: "browser",
+                method: message.method,
+                data: message.data,
+                timestamp: message.timestamp || new Date().toISOString(),
+                amount: message.amount,
+                userAgent: navigator.userAgent,
+            };
+            await logClient.append(logEntry);
         });
         const handleElementPointerOver = (e) => {
             const target = e.target;
@@ -15500,8 +15517,6 @@
     else {
         initializeDevToolsLatest();
     }
-
-    return setupConsole;
 
 }));
 //# sourceMappingURL=devtools.js.map
